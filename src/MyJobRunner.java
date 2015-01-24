@@ -1,10 +1,19 @@
+
+import java.io.IOException;
+import java.util.Iterator;
+
+import com.aliyun.odps.Column;
+import com.aliyun.odps.OdpsException;
+import com.aliyun.odps.OdpsType;
+import com.aliyun.odps.conf.Configurable;
 import com.aliyun.odps.conf.Configuration;
-import com.aliyun.odps.mapred.RunningJob;
+import com.aliyun.odps.data.Record;
+import com.aliyun.odps.data.TableInfo;
+import com.aliyun.odps.mapred.conf.JobConf;
+import com.aliyun.odps.mapred.utils.InputUtils;
+import com.aliyun.odps.mapred.utils.OutputUtils;
 import com.aliyun.odps.utils.*;
 import com.aliyun.odps.mapred.*;
-import com.aliyun.odps.mapred.conf.JobConf;
-import com.aliyun.odps.OdpsException;
-import com.aliyun.odps.conf.Configurable;
 
 /**
  * Job Runner
@@ -15,13 +24,23 @@ interface JobRunner extends Configurable {
 
 public class MyJobRunner implements JobRunner{
 	
-	public Configuration jobc ;
+	public JobConf jobc ;
+	private String inputFile ;
+	private String outputFile ;
+	private Mapper myMapper ;
+	private Reducer myReducer ;
+	private Reducer myCombiner ;
+	
 	
 	public RunningJob submit(){
-		RunningJob tmp = new MyRunningJob();
-		//jobc = (JobConf) this.
-		
-		return tmp ;
+		TableInfo[] inputTable = InputUtils.getTables(jobc) ;
+		TableInfo[] outputTable = OutputUtils.getTables(jobc) ;
+		inputFile = inputTable[0].getTableName() ;
+		outputFile = outputTable[0].getTableName() ;
+		myMapper = ReflectionUtils.newInstance(jobc.getMapperClass(), jobc) ;
+		myReducer = ReflectionUtils.newInstance(jobc.getReducerClass(), jobc) ;
+		myCombiner = ReflectionUtils.newInstance(jobc.getCombinerClass(), jobc) ;
+		return null ;
 	}
 	
 	public MyJobRunner(){
@@ -41,9 +60,10 @@ public class MyJobRunner implements JobRunner{
 	public void setConf(Configuration arg0) {
 		// TODO Auto-generated method stub
 		//System.out.println("setConf") ;
-		jobc = arg0 ;
-		System.out.println("setconf");
+		jobc = (JobConf)arg0 ;
+		
 	}
+
 
 	
 
