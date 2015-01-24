@@ -3,7 +3,9 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import com.aliyun.odps.Column;
+import com.aliyun.odps.OdpsType;
 import com.aliyun.odps.counter.Counter;
+import com.aliyun.odps.data.ArrayRecord;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.data.TableInfo;
 import com.aliyun.odps.mapred.Mapper;
@@ -22,7 +24,7 @@ public class MyReducerContext implements TaskContext {
 
 	public Record createMapOutputValueRecord() throws IOException {
 		// TODO Auto-generated method stub
-		return null;
+		return new ArrayRecord(new Column[] { new Column("value", OdpsType.BIGINT) });
 	}
 
 	public Record createOutputKeyRecord() throws IOException {
@@ -32,7 +34,7 @@ public class MyReducerContext implements TaskContext {
 
 	public Record createOutputRecord() throws IOException {
 		// TODO Auto-generated method stub
-		return null;
+		return new ArrayRecord(new Column[] { new Column("key", OdpsType.STRING), new Column("value", OdpsType.BIGINT) });
 	}
 
 	public Record createOutputRecord(String arg0) throws IOException {
