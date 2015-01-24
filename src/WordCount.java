@@ -122,7 +122,8 @@ public class WordCount {
     OutputUtils.addTable(TableInfo.builder().tableName(args[1]).build(), job);
 
     Class<? extends JobRunner> runnerClz = (Class<? extends JobRunner>) Class.forName(System
-        .getProperty("job.runner.class", "com.aliyun.odps.mapred.JobRunnerImpl"));
+        .getProperty("job.runner.class", "JobRunner"));
+    
     JobRunner runner = ReflectionUtils.newInstance(runnerClz, job);
     RunningJob rj = runner.submit();
     rj.waitForCompletion();
