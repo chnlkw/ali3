@@ -13,13 +13,17 @@ import com.aliyun.odps.mapred.conf.JobConf;
 import com.aliyun.odps.mapred.utils.InputUtils;
 import com.aliyun.odps.mapred.utils.OutputUtils;
 import com.aliyun.odps.utils.*;
-import com.aliyun.odps.mapred.*;
+import com.aliyun.odps.mapred.Reducer;
+//import com.aliyun.odps.mapred.*;
+import com.aliyun.odps.mapred.RunningJob;
+import com.aliyun.odps.mapred.Mapper;
+import com.aliyun.odps.mapred.TaskContext;
 
 /**
  * Job Runner
  */
 interface JobRunner extends Configurable {
-  RunningJob submit() throws OdpsException;
+  RunningJob submit() throws OdpsException, IOException;
 }
 
 public class MyJobRunner implements JobRunner{
@@ -30,9 +34,10 @@ public class MyJobRunner implements JobRunner{
 	private Mapper myMapper ;
 	private Reducer myReducer ;
 	private Reducer myCombiner ;
+	private Mapper.TaskContext mapContext;
+	private Reducer.TaskContext reduceContext;
 	
-	
-	public RunningJob submit(){
+	public RunningJob submit() throws IOException{
 		TableInfo[] inputTable = InputUtils.getTables(jobc) ;
 		TableInfo[] outputTable = OutputUtils.getTables(jobc) ;
 		inputFile = inputTable[0].getTableName() ;
@@ -40,6 +45,12 @@ public class MyJobRunner implements JobRunner{
 		myMapper = ReflectionUtils.newInstance(jobc.getMapperClass(), jobc) ;
 		myReducer = ReflectionUtils.newInstance(jobc.getReducerClass(), jobc) ;
 		myCombiner = ReflectionUtils.newInstance(jobc.getCombinerClass(), jobc) ;
+		
+		mapContext = new MyMapperContext();
+		myMapper.setup(mapContext);
+		
+		reduceContext = new MyReducerContext();
+		myReducer.setup(reduceContext);
 		return null ;
 	}
 	
