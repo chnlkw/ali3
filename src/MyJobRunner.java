@@ -40,9 +40,9 @@ public class MyJobRunner implements JobRunner{
 
 	public void setConf(Configuration arg0) {
 		// TODO Auto-generated method stub
-		System.out.println("setConf") ;
+		//System.out.println("setConf") ;
 		jobc = arg0 ;
-		
+		System.out.println("setconf");
 	}
 
 	
