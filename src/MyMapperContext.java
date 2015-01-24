@@ -1,6 +1,9 @@
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 
 import com.aliyun.odps.Column;
 import com.aliyun.odps.OdpsType;
@@ -17,6 +20,13 @@ import com.aliyun.odps.mapred.conf.JobConf;
 
 public class MyMapperContext implements TaskContext {
 
+	public ArrayList<MyEntry<String, Long>> buf;
+	
+	public MyMapperContext()
+	{
+		buf = new ArrayList<MyEntry<String, Long>>();
+	}
+	
 	public Record createMapOutputKeyRecord() throws IOException {
 		// TODO Auto-generated method stub
 		return new ArrayRecord(new Column[] { new Column("key", OdpsType.STRING) });
@@ -85,7 +95,6 @@ public class MyMapperContext implements TaskContext {
 
 	public void write(Record arg0) throws IOException {
 		// TODO Auto-generated method stub
-
 	}
 
 	public void write(Record arg0, String arg1) throws IOException {
@@ -95,6 +104,7 @@ public class MyMapperContext implements TaskContext {
 
 	public void write(Record arg0, Record arg1) throws IOException {
 		// TODO Auto-generated method stub
+		buf.add(new MyEntry<String, Long>(arg0.getString(0), arg1.getBigint(0)));
 
 	}
 

@@ -35,8 +35,8 @@ public class MyJobRunner implements JobRunner{
 	private Mapper myMapper ;
 	private Reducer myReducer ;
 	private Reducer myCombiner ;
-	private Mapper.TaskContext mapContext;
-	private Reducer.TaskContext reduceContext;
+	private MyMapperContext mapContext;
+	private MyReducerContext reduceContext;
 	
 	public RunningJob submit() throws IOException{
 		TableInfo[] inputTable = InputUtils.getTables(jobc) ;
@@ -68,6 +68,9 @@ public class MyJobRunner implements JobRunner{
 			myMapper.map(recordNum++, ar, mapContext);
 		}
 		br.close();
+		for (MyEntry<String, Long> e : mapContext.buf)
+			System.out.println("for " + e.getKey() + "  " + e.getValue());
+
 		reduceContext = new MyReducerContext();
 		myReducer.setup(reduceContext);
 		
