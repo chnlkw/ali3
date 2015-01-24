@@ -1,5 +1,5 @@
 
-import java.io.IOException;
+import java.io.*;
 import java.util.Iterator;
 
 import com.aliyun.odps.Column;
@@ -7,6 +7,7 @@ import com.aliyun.odps.OdpsException;
 import com.aliyun.odps.OdpsType;
 import com.aliyun.odps.conf.Configurable;
 import com.aliyun.odps.conf.Configuration;
+import com.aliyun.odps.data.ArrayRecord;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.data.TableInfo;
 import com.aliyun.odps.mapred.conf.JobConf;
@@ -49,18 +50,34 @@ public class MyJobRunner implements JobRunner{
 		mapContext = new MyMapperContext();
 		myMapper.setup(mapContext);
 		
+		BufferedReader br = new BufferedReader(new FileReader(inputFile)) ;
+		String line ;
+		int recordNum = 0 ;
+		//Column[] cls = {new Column("w1",OdpsType.STRING), new Column("w2",OdpsType.STRING)} ;
+		//ArrayRecord ar = new ArrayRecord(cls) ;
+		while((line = br.readLine()) != null){
+			String[] ws = line.split(",") ;
+			Column[] cls = new Column[ws.length];
+			for(int i=0 ;i<ws.length ;i++){
+				cls[i] = new Column("word",OdpsType.STRING) ;
+			}
+			ArrayRecord ar = new ArrayRecord(cls) ;
+			for(int i=0 ;i<ws.length; i++){
+				ar.setString(i, ws[i]);
+			}
+			myMapper.map(recordNum++, ar, mapContext);
+		}
+		br.close();
 		reduceContext = new MyReducerContext();
 		myReducer.setup(reduceContext);
+		
 		return null ;
 	}
 	
 	public MyJobRunner(){
-		System.out.println("no parameter init") ;
+		//System.out.println("no parameter init") ;
 	}
 	
-	public void init(JobConf jc){
-		jobc = jc ;
-	}
 
 	public Configuration getConf() {
 		// TODO Auto-generated method stub
