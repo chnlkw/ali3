@@ -1,7 +1,13 @@
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -21,10 +27,40 @@ import com.aliyun.odps.mapred.conf.JobConf;
 public class MyMapperContext implements TaskContext {
 
 	public ArrayList<MyEntry<String, Long>> buf;
+	public ArrayList<String> fileList;
+	public int currentLen = 0;
+	
+	public static int FILE_LEN = 100;// * 1024 * 1024;
+	public static final String FILE_PREFIX = "TMPFILE"; 
 	
 	public MyMapperContext()
 	{
 		buf = new ArrayList<MyEntry<String, Long>>();
+		fileList = new ArrayList<String>();
+	}
+	
+	void flushBuf2File() throws IOException {
+		// sort
+		Collections.sort(buf, new Comparator<MyEntry<String, Long>>() {
+			public int compare(MyEntry<String, Long> o1,
+					MyEntry<String, Long> o2) {
+				String a = o1.getKey();
+				String b = o2.getKey();
+				return a.compareTo(b);
+			}
+		});
+		// write to file
+		String filename = FILE_PREFIX + fileList.size();
+		BufferedWriter writer = new BufferedWriter(new FileWriter(filename)) ;
+		for (int i = 0; i < buf.size(); i ++) {
+			MyEntry<String, Long> e = buf.get(i);
+			writer.write(e.getKey() + " " + e.getValue() + "\n");
+		}
+		writer.close();
+		fileList.add(filename);
+		// clear buf
+		currentLen = 0;
+		buf.clear();
 	}
 	
 	public Record createMapOutputKeyRecord() throws IOException {
@@ -103,9 +139,11 @@ public class MyMapperContext implements TaskContext {
 	}
 
 	public void write(Record arg0, Record arg1) throws IOException {
-		// TODO Auto-generated method stub
-		buf.add(new MyEntry<String, Long>(arg0.getString(0), arg1.getBigint(0)));
-
+		String s = arg0.getString(0);
+		buf.add(new MyEntry<String, Long>(s, arg1.getBigint(0)));
+		currentLen += s.length();
+		if (currentLen > FILE_LEN)
+			flushBuf2File();
 	}
 
 	public Class<? extends Reducer> getCombinerClass()

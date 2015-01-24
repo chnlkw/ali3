@@ -1,5 +1,4 @@
-import java.io.BufferedInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Iterator;
 
 import com.aliyun.odps.Column;
@@ -17,6 +16,16 @@ import com.aliyun.odps.mapred.conf.JobConf;
 
 public class MyReducerContext implements TaskContext {
 
+	String outFile ;
+	BufferedWriter bw ;
+	public MyReducerContext(String outputFile){
+		outFile = outputFile ;
+	}
+	
+	public void closeFileWriter() throws IOException{
+		bw.close(); 
+	}
+	
 	public Record createMapOutputKeyRecord() throws IOException {
 		// TODO Auto-generated method stub
 		return null;
@@ -29,11 +38,13 @@ public class MyReducerContext implements TaskContext {
 
 	public Record createOutputKeyRecord() throws IOException {
 		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
 	public Record createOutputRecord() throws IOException {
 		// TODO Auto-generated method stub
+		bw = new BufferedWriter(new FileWriter(outFile)) ;
 		return new ArrayRecord(new Column[] { new Column("key", OdpsType.STRING), new Column("value", OdpsType.BIGINT) });
 	}
 
@@ -85,7 +96,9 @@ public class MyReducerContext implements TaskContext {
 
 	public void write(Record arg0) throws IOException {
 		// TODO Auto-generated method stub
-
+		String word = arg0.getString(0) ;
+		long sum = arg0.getBigint(1) ;
+		bw.write(word+","+sum+"\n");
 	}
 
 	public void write(Record arg0, String arg1) throws IOException {

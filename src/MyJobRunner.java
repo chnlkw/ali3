@@ -1,14 +1,11 @@
 
 import java.io.*;
-import java.util.Iterator;
-
 import com.aliyun.odps.Column;
 import com.aliyun.odps.OdpsException;
 import com.aliyun.odps.OdpsType;
 import com.aliyun.odps.conf.Configurable;
 import com.aliyun.odps.conf.Configuration;
 import com.aliyun.odps.data.ArrayRecord;
-import com.aliyun.odps.data.Record;
 import com.aliyun.odps.data.TableInfo;
 import com.aliyun.odps.mapred.conf.JobConf;
 import com.aliyun.odps.mapred.utils.InputUtils;
@@ -18,7 +15,6 @@ import com.aliyun.odps.mapred.Reducer;
 //import com.aliyun.odps.mapred.*;
 import com.aliyun.odps.mapred.RunningJob;
 import com.aliyun.odps.mapred.Mapper;
-import com.aliyun.odps.mapred.TaskContext;
 
 /**
  * Job Runner
@@ -35,8 +31,8 @@ public class MyJobRunner implements JobRunner{
 	private Mapper myMapper ;
 	private Reducer myReducer ;
 	private Reducer myCombiner ;
-	private MyMapperContext mapContext;
-	private MyReducerContext reduceContext;
+	private Mapper.TaskContext mapContext;
+	private Reducer.TaskContext reduceContext;
 	
 	public RunningJob submit() throws IOException{
 		TableInfo[] inputTable = InputUtils.getTables(jobc) ;
@@ -68,11 +64,14 @@ public class MyJobRunner implements JobRunner{
 			myMapper.map(recordNum++, ar, mapContext);
 		}
 		br.close();
-		for (MyEntry<String, Long> e : mapContext.buf)
-			System.out.println("for " + e.getKey() + "  " + e.getValue());
-
-		reduceContext = new MyReducerContext();
+		((MyMapperContext) mapContext).flushBuf2File();
+		
+		reduceContext = new MyReducerContext(outputFile);
 		myReducer.setup(reduceContext);
+		
+		MyMergeSort mySort = new MyMergeSort(myReducer, reduceContext);
+		mySort.sort(((MyMapperContext) mapContext).fileList);
+		((MyReducerContext) reduceContext).closeFileWriter();
 		
 		return null ;
 	}
